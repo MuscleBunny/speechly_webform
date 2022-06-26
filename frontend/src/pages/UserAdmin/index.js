@@ -6,7 +6,8 @@ import {TableLayout, TableRow, TableHeader, TableCell} from '../../components/ta
 
 function UserAdmin() {
   const [userList, setUserList] = useState([]);
-  const [editIndex, setEditIndex] = useState(-1);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [editIndex, setEditIndex] = useState(-2);
   
   const [username, setUsername] = useState('');
   const [fullname, setFullname] = useState('');
@@ -14,9 +15,13 @@ function UserAdmin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   useEffect( () => {
+    setStatusMessage('Please wait a moment till finish fetching the data from server.');
     axios.get(config.api + 'user')
     .then( res => {
       setUserList(res.data);
+    })
+    .catch( err => {
+      setStatusMessage('Error has occured while fetching the data.');
     });
   }, [])
 
@@ -29,9 +34,10 @@ function UserAdmin() {
     setPassword(userList[index].password);
   }
   const cancelEditing = () => {
-    setEditIndex(-1);
+    setEditIndex(-2);
   }
   const saveRow = () => {
+    setStatusMessage('Please wait.');
     axios.post(config.api + 'user/update', {
       id: userList[editIndex].id,
       updates: {
@@ -39,12 +45,16 @@ function UserAdmin() {
       }
     })
     .then( res => {
+      setStatusMessage('Complete saving user.');
       userList[editIndex].username = username;
       userList[editIndex].fullname = fullname;
       userList[editIndex].contactphone = contactphone;
       userList[editIndex].email = email;
       userList[editIndex].password = password;
       setEditIndex(-1);
+    })
+    .catch((err)=>{
+      setStatusMessage('Error has occured while Saving the data.');
     });
   }
 
@@ -52,9 +62,40 @@ function UserAdmin() {
 
   }
 
+  const addRow = () => {
+    setEditIndex(-1);
+    setUsername('');
+    setFullname('');
+    setContactphone('');
+    setEmail('');
+    setPassword('');
+  }
+
+  const requestAddRow = () => {
+    setStatusMessage('Please wait.');
+    axios.post(config.api + 'user/add', {
+      username, fullname, contactphone, email, password
+    })
+    .then( res => {
+      setStatusMessage('Complete saving user.');
+      userList[editIndex].username = username;
+      userList[editIndex].fullname = fullname;
+      userList[editIndex].contactphone = contactphone;
+      userList[editIndex].email = email;
+      userList[editIndex].password = password;
+      setEditIndex(-1);
+    })
+    .catch((err)=>{
+      setStatusMessage('Error has occured while fetching the data.');
+    });
+  }
+
   return (
     <div>
-      <a onClick={()=>{addRow()}}>Add New</a>
+      <div>
+        <p>{statusMessage}</p>
+        <a onClick={()=>{addRow()}}>Add New</a>
+      </div>
       <TableLayout>
         <TableHeader>
           <TableRow>
@@ -68,6 +109,19 @@ function UserAdmin() {
           </TableRow>
         </TableHeader>
         <tbody>
+          {
+            editIndex === -1 ?
+            <TableRow>
+              <TableCell><input value={username} onChange={(e)=>{setUsername(e.target.value)}}/></TableCell>
+              <TableCell><input value={fullname} onChange={(e)=>{setFullname(e.target.value)}}/></TableCell>
+              <TableCell><input value={contactphone} onChange={(e)=>{setContactphone(e.target.value)}}/></TableCell>
+              <TableCell><input value={email} onChange={(e)=>{setEmail(e.target.value)}}/></TableCell>
+              <TableCell><input value={password} onChange={(e)=>{setPassword(e.target.value)}}/></TableCell>
+              <TableCell><a onClick={()=>{requestAddRow()}}>Save</a></TableCell>
+              <TableCell><a onClick={()=>{cancelEditing()}}>Cancel</a></TableCell>
+            </TableRow>
+            : null
+          }
           {
             userList.length ?
             userList.map( (item, index) => {
