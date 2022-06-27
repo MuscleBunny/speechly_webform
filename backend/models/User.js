@@ -28,7 +28,8 @@ User.update = async (id, updates) => {
   return await db.query(query);
 }
 
-User.delete = async () => {
+User.delete = async (id) => {
+  return await db.query(`delete from users where id=${id}`);
 }
 
 User.findAll = async () => {

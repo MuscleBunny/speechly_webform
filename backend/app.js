@@ -26,13 +26,13 @@ app.post("/user/update", async (req, res) => {
 });
 
 app.post("/user/insert", async (req, res) => {
-  const rows = await User.findById(req.params.id);
-  res.json({ message: rows });
+  const result = await User.insert(req.body);
+  res.send(result);
 });
 
-app.get("/user/insert", async (req, res) => {
-  const rows = await User.findById(req.params.id);
-  res.json({ message: rows });
+app.post("/user/delete", async (req, res) => {
+  const result = await User.delete(req.body.id);
+  res.send(result);
 });
 
 app.listen(3001, () => {

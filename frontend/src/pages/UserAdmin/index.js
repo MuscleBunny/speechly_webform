@@ -18,6 +18,7 @@ function UserAdmin() {
     setStatusMessage('Please wait a moment till finish fetching the data from server.');
     axios.get(config.api + 'user')
     .then( res => {
+      setStatusMessage('Complete fetching the data from server.');
       setUserList(res.data);
     })
     .catch( err => {
@@ -51,15 +52,25 @@ function UserAdmin() {
       userList[editIndex].contactphone = contactphone;
       userList[editIndex].email = email;
       userList[editIndex].password = password;
-      setEditIndex(-1);
+      setEditIndex(-2);
     })
     .catch((err)=>{
       setStatusMessage('Error has occured while Saving the data.');
     });
   }
 
-  const deleteRow = (id) => {
-
+  const deleteRow = (index) => {
+    setStatusMessage('Please wait.');
+    axios.post(config.api + 'user/delete', {
+      id : userList[index].id
+    })
+    .then( res => {
+      setStatusMessage('Complete deleting user.');
+      setUserList([...userList.slice(0, index), ...userList.slice(index+1)]);
+    })
+    .catch((err)=>{
+      setStatusMessage('Error has occured while Deleting the data.');
+    });
   }
 
   const addRow = () => {
@@ -73,19 +84,19 @@ function UserAdmin() {
 
   const requestAddRow = () => {
     setStatusMessage('Please wait.');
-    axios.post(config.api + 'user/add', {
+    axios.post(config.api + 'user/insert', {
       username, fullname, contactphone, email, password
     })
     .then( res => {
       setStatusMessage('Complete saving user.');
-      userList[editIndex].username = username;
-      userList[editIndex].fullname = fullname;
-      userList[editIndex].contactphone = contactphone;
-      userList[editIndex].email = email;
-      userList[editIndex].password = password;
-      setEditIndex(-1);
+      setUserList([...userList, {
+        id: res.data.insertId,
+        username, fullname, contactphone, email, password
+      }]);
+      setEditIndex(-2);
     })
     .catch((err)=>{
+      console.log(err);
       setStatusMessage('Error has occured while fetching the data.');
     });
   }
