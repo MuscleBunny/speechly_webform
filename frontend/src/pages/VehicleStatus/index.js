@@ -3,10 +3,14 @@ import axios from 'axios'
 import './index.css';
 import config from '../../config'
 import {TableLayout, TableRow, TableHeader, TableCell} from '../../components/table'
+import Modal from '../../components/Modal';
+
 
 function VehicleStatus() {
   const [vehicleList, setVehicleList] = useState([]);
   const [statusMessage, setStatusMessage] = useState('');
+  
+  const [isShowDetial, setIsShowDetail] = useState(-1);
 
   useEffect( () => {
     setStatusMessage('Please wait a moment till finish fetching the data from server.');
@@ -34,7 +38,7 @@ function VehicleStatus() {
           {
             vehicleList.length ?
             vehicleList.map( (item, index) => {
-              return <TableRow key={index} onClick={()=>{alert(index)}}>
+              return <TableRow key={index} onClick={()=>{ setIsShowDetail(index) }}>
                 <TableCell>{item.inbound_driver_name}</TableCell>
                 <TableCell>{item.inbound_company_name}</TableCell>
                 <TableCell>{item.inbound_license}</TableCell>
@@ -45,6 +49,13 @@ function VehicleStatus() {
           }
         </tbody>
       </TableLayout>
+      {
+        isShowDetial !== -1 ?
+        <Modal>
+          <div>asdfasdf</div>
+        </Modal>
+        : null
+      }
     </div>
   );
 }
