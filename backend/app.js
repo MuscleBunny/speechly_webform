@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require('cors');
 const User = require('./models/user');
+const Vehicle = require('./models/vehicle');
 
 const app = express();
 
@@ -33,6 +34,12 @@ app.post("/user/insert", async (req, res) => {
 app.post("/user/delete", async (req, res) => {
   const result = await User.delete(req.body.id);
   res.send(result);
+});
+
+
+app.get("/vehicle", async (req, res) => {
+  const rows = await Vehicle.findAll();
+  res.send(rows);
 });
 
 app.listen(3001, () => {
