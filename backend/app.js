@@ -42,6 +42,11 @@ app.get("/vehicle", async (req, res) => {
   res.send(rows);
 });
 
+app.get('/vehicle/update', async (req, res) => {
+  const rows = await Vehicle.update(req.body.id, req.body.updates);
+  res.send(rows);
+})
+
 app.listen(3001, () => {
   console.log("Hello");
 });

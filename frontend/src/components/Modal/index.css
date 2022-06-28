@@ -7,6 +7,7 @@
   height: 100%;
   z-index: 9999;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
@@ -14,5 +15,8 @@
 .custom-modal-content {
   background: #fff;
   padding: 30px;
-  z-index: 10000;
+}
+
+.custom-modal-footer {
+  margin-top: 10px; 
 }

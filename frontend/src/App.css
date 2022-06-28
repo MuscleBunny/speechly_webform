@@ -2,7 +2,17 @@
   text-align: center;
 }
 
+a {
+  cursor: pointer;
+}
+
 input {
+  border: 0px;
+  margin: 2px;
+  width: calc( 100% - 10px);
   outline: 0;
-  width: 100%;
+}
+
+input:focus {
+  outline: 0;
 }

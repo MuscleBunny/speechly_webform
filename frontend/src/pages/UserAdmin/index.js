@@ -107,7 +107,7 @@ function UserAdmin() {
         <p>{statusMessage}</p>
         <a onClick={()=>{addRow()}}>Add New</a>
       </div>
-      <TableLayout>
+      <TableLayout style={{width:'600px'}}>
         <TableHeader>
           <TableRow>
             <TableCell>User Name</TableCell>

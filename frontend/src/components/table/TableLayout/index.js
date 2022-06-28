@@ -2,7 +2,7 @@ import './index.css'
 
 function TableLayout(props) {
   return (
-    <table className="table">
+    <table className="table" style={props.style}>
       {props.children}
     </table>
   );
