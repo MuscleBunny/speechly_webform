@@ -11,6 +11,7 @@ function VehicleStatus() {
   const [statusMessage, setStatusMessage] = useState('');
   
   const [isShowDetial, setIsShowDetail] = useState(-1);
+  const [isShowSignOff, setIsShowSignOff] = useState(false);
 
   useEffect( () => {
     setStatusMessage('Please wait a moment till finish fetching the data from server.');
@@ -51,8 +52,31 @@ function VehicleStatus() {
       </TableLayout>
       {
         isShowDetial !== -1 ?
-        <Modal>
-          <div>asdfasdf</div>
+        <Modal show={isShowDetial!==-1} close={() => { setIsShowDetail(-1) }}>
+          <TableLayout>
+            <TableHeader>
+              <TableRow>
+                <TableCell>Driver Name</TableCell>
+                <TableCell>Company Name</TableCell>
+                <TableCell>License Plate</TableCell>
+                <TableCell>Duration</TableCell>
+                <TableCell>Inbound Date</TableCell>
+                <TableCell>Inbound Time</TableCell>
+                <TableCell>Sign Off</TableCell>
+              </TableRow>
+            </TableHeader>
+            <tbody><tr>
+              <TableCell>{vehicleList[isShowDetial].inbound_driver_name}</TableCell>
+              <TableCell>{vehicleList[isShowDetial].inbound_company_name}</TableCell>
+              <TableCell>{vehicleList[isShowDetial].inbound_license}</TableCell>
+              <TableCell>{vehicleList[isShowDetial].inbound_driver_name}</TableCell>
+              <TableCell>{vehicleList[isShowDetial].inboudn_date}</TableCell>
+              <TableCell>{vehicleList[isShowDetial].inbound_time}</TableCell>
+              <TableCell><a onClick={ ()=> { setIsShowSignOff(true) } }>Sign Off</a></TableCell>
+            </tr></tbody>
+          </TableLayout>
+          <Modal show={isShowSignOff} close={() => { setIsShowSignOff(false) }}>
+          </Modal>
         </Modal>
         : null
       }
