@@ -11,7 +11,7 @@ function VehicleStatus() {
   const [vehicleList, setVehicleList] = useState([]);
   const [statusMessage, setStatusMessage] = useState('');
   
-  const [isShowDetial, setIsShowDetail] = useState(-1);
+  const [detailIndex, setDetailIndex] = useState(-1);
   const [isShowSignOff, setIsShowSignOff] = useState(false);
 
   const [driverName, setDriverName] = useState('');
@@ -20,6 +20,9 @@ function VehicleStatus() {
   const [druation, setDuration] = useState('');
   const [inboundDate, setInboundDate] = useState('');
   const [inboundTime, setInboundTime] = useState('');
+  const [outboundDate, setOutboundDate] = useState('');
+  const [outboundTime, setOutboundTime] = useState('');
+  const [recordStatus, setRecordStatus] = useState(0);
 
   useEffect( () => {
     setStatusMessage('Please wait a moment till finish fetching the data from server.');
@@ -34,17 +37,44 @@ function VehicleStatus() {
   }, [])
 
   const editRow = (index) => {
-    setIsShowDetail(index)
+    setDetailIndex(index)
     setDriverName(vehicleList[index].inbound_driver_name);
     setCompanyName(vehicleList[index].inbound_company_name);
     setLicense(vehicleList[index].inbound_license);
-    setDuration(vehicleList[index].inbound_driver_name);
+    setDuration(vehicleList[index].calculated_duation_total);
     setInboundDate(vehicleList[index].inbound_date);
     setInboundTime(vehicleList[index].inbound_time);
+    setRecordStatus(vehicleList[index].record_status);
+  }
+
+  const saveRow = () => {
+    setStatusMessage('Please wait.');
+    axios.post(config.api + 'vehicle/update', {
+      id: vehicleList[detailIndex].id,
+      updates: {
+        inbound_driver_name:driverName,
+        inbound_company_name:companyName,
+        inbound_license:license,
+        calculated_duation_total:druation,
+        inbound_date:inboundDate,
+        inbound_time:inboundTime,
+        record_status:recordStatus,
+        outbound_date:outboundDate,
+        outbound_time:outboundTime
+      }
+    })
+    .then( res => {
+      setDetailIndex(-1);
+      setStatusMessage('Complete Saving the data.');
+    })
+    .catch((err)=>{
+      setStatusMessage('Error has occured while Saving the data.');
+    });
   }
   
   return (
     <div>
+      <p>{statusMessage}</p>
       <TableLayout style={{width:'700px'}}>
         <TableHeader>
           <TableRow>
@@ -62,20 +92,21 @@ function VehicleStatus() {
                 <TableCell>{item.inbound_driver_name}</TableCell>
                 <TableCell>{item.inbound_company_name}</TableCell>
                 <TableCell>{item.inbound_license}</TableCell>
-                <TableCell>{item.inbound_driver_name}</TableCell>
+                <TableCell>{item.calculated_duation_total}</TableCell>
               </TableRow>
             }) :
             null
           }
         </tbody>
       </TableLayout>
+
       {
-        isShowDetial !== -1 ?
+        detailIndex !== -1 ?
         <Modal
-          show={isShowDetial!==-1}
-          close={() => { setIsShowDetail(-1) }}
-          okAction={null}
-          cancelAction={null}
+          show={detailIndex!==-1}
+          close={() => { setDetailIndex(-1) }}
+          okAction={saveRow}
+          cancelAction={() => { setDetailIndex(-1) }}
           okName='Save'
           cancelName='Cancel'>
           <TableLayout>
@@ -103,11 +134,12 @@ function VehicleStatus() {
           <Modal
             show={isShowSignOff}
             close={() => { setIsShowSignOff(false) }}
-            okAction={()=> { setIsShowSignOff(false) }}
+            okAction={()=> { setRecordStatus(1); setIsShowSignOff(false); }}
             cancelAction={()=> { setIsShowSignOff(false) }}
             okName='OK'
             cancelName='Cancel'>
-            <div style={{padding: '10px'}}>Are you sure?</div>
+            <div><span>Date : </span><input value={outboundDate} onChange={(e)=>{setOutboundDate(e.target.value)}}/></div>
+            <div>Time : <input value={outboundTime} onChange={(e)=>{setOutboundTime(e.target.value)}}/></div>
           </Modal>
         </Modal>
         : null

@@ -6,7 +6,7 @@ a {
   cursor: pointer;
 }
 
-input {
+table input {
   border: 0px;
   margin: 2px;
   width: calc( 100% - 10px);

@@ -3,7 +3,8 @@ const db = require('../helpers/query.js');
 const Vehicle = {}
 
 Vehicle.insert = async (newUser) => {
-  return await db.query('insert into vehicle_status (username, fullname, contactphone, email, password) values(?, ?, ?, ?, ?)',
+  // driverName, companyName, license, druation, inboundDate, inboundTime, recordStatus, outboundDate, outboundTime
+  return await db.query('insert into vehicle_status (driverName, companyName, license, druation, inboundDate, inboundTime, outbou, recordStatus) values(?, ?, ?, ?, ?)',
     [
       newUser.username,
       newUser.fullname,

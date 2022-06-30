@@ -8,7 +8,8 @@ function App() {
     <div className="App">
       <Router>
         <Link to='/'>Admin</Link>
-        <Link to='/vehicle'>vehicle</Link>
+        <>&nbsp;</>
+        <Link to='/vehicle'>Vehicle</Link>
         <Routes>
           <Route path='/' element={<UserAdmin/>}></Route>
           <Route path='/vehicle' element={<VehicleStatus/>}></Route>

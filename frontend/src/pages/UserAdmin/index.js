@@ -14,6 +14,9 @@ function UserAdmin() {
   const [contactphone, setContactphone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+
+  
   useEffect( () => {
     setStatusMessage('Please wait a moment till finish fetching the data from server.');
     axios.get(config.api + 'user')
