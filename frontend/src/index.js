@@ -8,7 +8,7 @@ import { SpeechProvider } from "@speechly/react-client";
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   // <React.StrictMode>
-  <SpeechProvider>
+  <SpeechProvider appId='ee81a936-c236-44cf-9bfc-128dedcd2815'>
     <App />
   </SpeechProvider>
   // </React.StrictMode>

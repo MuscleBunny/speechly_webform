@@ -90,7 +90,6 @@ function Login() {
         <div className="Form_group">
           <VoiceInput
             label='Username'
-            changeOnEntityType={data.username}
             value={data.username}
             onChange={(e) => handleChange(e, "username")}
           />
@@ -99,7 +98,6 @@ function Login() {
           <VoiceInput
             label='Password'
             type='password'
-            changeOnEntityType={data.password}
             value={data.password}
             onChange={(e) => handleChange(e, "password")}
           />
