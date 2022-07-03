@@ -1,3 +1,4 @@
+const { user } = require('../config/db.config.js');
 const db = require('../helpers/query.js');
 
 const User = {}
@@ -38,6 +39,9 @@ User.findAll = async () => {
 
 User.findById = async (id) => {
   return await db.query('SELECT * from users where id=?', [id]);
+}
+User.find = async (username, password) => {
+  return await db.query('SELECT * from users where username="' + username + '" && password="' + password + '"');
 }
 
 module.exports = User

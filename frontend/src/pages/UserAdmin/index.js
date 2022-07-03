@@ -3,39 +3,91 @@ import axios from 'axios'
 import './index.css';
 import config from '../../config'
 import {TableLayout, TableRow, TableHeader, TableCell} from '../../components/table'
+import storage from '../../libs/storage'
+import {useNavigate} from 'react-router-dom'
+import Button from '../../components/Button'
+import Modal from '../../components/Modal'
+import { useSpeechContext } from "@speechly/react-client";
+import {
+  PushToTalkButton,
+  BigTranscript,
+  IntroPopup,
+} from "@speechly/react-ui";
+import { VoiceInput, VoiceDatePicker } from "@speechly/react-voice-forms";
 
 function UserAdmin() {
+  const navigate = useNavigate();
+  const [token, setToken] = useState([]);
   const [userList, setUserList] = useState([]);
   const [statusMessage, setStatusMessage] = useState('');
   const [editIndex, setEditIndex] = useState(-2);
   
-  const [username, setUsername] = useState('');
-  const [fullname, setFullname] = useState('');
-  const [contactphone, setContactphone] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { segment } = useSpeechContext();
+  const [data, setData] = useState({
+    username: '',
+    fullname: '',
+    contactphone: '',
+    email: '',
+    password: ''
+  });
+  
+  useEffect(() => {
+    if (segment) {
+      if (segment.entities) {
+        segment.entities.forEach((entity) => {
+          console.log(entity.type, entity.value);
+          setData((data) => ({ ...data, [entity.type]: entity.value }));
+        });
+      }
+      if (segment.isFinal) {
+        if (segment.entities) {
+          segment.entities.forEach((entity) => {
+            console.log("✅", entity.type, entity.value);
+            setData((data) => ({ ...data, [entity.type]: entity.value }));
+          });
+        }
+      }
+    }
+  }, [segment]);
+
+  const handleChange = (e, key) => { setData({ ...data, [key]: e }) };
+  // const [username, setUsername] = useState('');
+  // const [fullname, setFullname] = useState('');
+  // const [contactphone, setContactphone] = useState('');
+  // const [email, setEmail] = useState('');
+  // const [password, setPassword] = useState('');
 
 
   
   useEffect( () => {
+    const token = storage.get('token');
+    if ( token === '' ) {
+      navigate('/');
+    }
+    setToken(token);
     setStatusMessage('Please wait a moment till finish fetching the data from server.');
-    axios.get(config.api + 'user')
+    axios.get(config.api + 'user', {
+      headers: {'Authorization': token}
+    })
     .then( res => {
       setStatusMessage('Complete fetching the data from server.');
       setUserList(res.data);
     })
     .catch( err => {
       setStatusMessage('Error has occured while fetching the data.');
+      navigate('/');
     });
   }, [])
 
   const editRow = (index) => {
     setEditIndex(index);
-    setUsername(userList[index].username);
-    setFullname(userList[index].fullname);
-    setContactphone(userList[index].contactphone);
-    setEmail(userList[index].email);
-    setPassword(userList[index].password);
+    setData({
+      username: userList[index].username,
+      fullname: userList[index].fullname,
+      contactphone: userList[index].contactphone,
+      email: userList[index].email,
+      password: userList[index].password
+    })
   }
   const cancelEditing = () => {
     setEditIndex(-2);
@@ -45,20 +97,23 @@ function UserAdmin() {
     axios.post(config.api + 'user/update', {
       id: userList[editIndex].id,
       updates: {
-        username, fullname, contactphone, email, password
+        ...data
       }
+    }, {
+      headers: {'Authorization': token}
     })
     .then( res => {
       setStatusMessage('Complete saving user.');
-      userList[editIndex].username = username;
-      userList[editIndex].fullname = fullname;
-      userList[editIndex].contactphone = contactphone;
-      userList[editIndex].email = email;
-      userList[editIndex].password = password;
+      userList[editIndex].username = data.username;
+      userList[editIndex].fullname = data.fullname;
+      userList[editIndex].contactphone = data.contactphone;
+      userList[editIndex].email = data.email;
+      userList[editIndex].password = data.password;
       setEditIndex(-2);
     })
     .catch((err)=>{
       setStatusMessage('Error has occured while Saving the data.');
+      navigate('/');
     });
   }
 
@@ -66,6 +121,8 @@ function UserAdmin() {
     setStatusMessage('Please wait.');
     axios.post(config.api + 'user/delete', {
       id : userList[index].id
+    }, {
+      headers: {'Authorization': token}
     })
     .then( res => {
       setStatusMessage('Complete deleting user.');
@@ -73,34 +130,40 @@ function UserAdmin() {
     })
     .catch((err)=>{
       setStatusMessage('Error has occured while Deleting the data.');
+      navigate('/');
     });
   }
 
   const addRow = () => {
     setEditIndex(-1);
-    setUsername('');
-    setFullname('');
-    setContactphone('');
-    setEmail('');
-    setPassword('');
+    setData({
+      username: '',
+      fullname: '',
+      contactphone: '',
+      email: '',
+      password: ''
+    })
   }
 
   const requestAddRow = () => {
     setStatusMessage('Please wait.');
     axios.post(config.api + 'user/insert', {
-      username, fullname, contactphone, email, password
+      ...data
+    }, {
+      headers: {'Authorization': token}
     })
     .then( res => {
       setStatusMessage('Complete saving user.');
       setUserList([...userList, {
         id: res.data.insertId,
-        username, fullname, contactphone, email, password
+        ...data
       }]);
       setEditIndex(-2);
     })
     .catch((err)=>{
       console.log(err);
       setStatusMessage('Error has occured while fetching the data.');
+      navigate('/');
     });
   }
 
@@ -110,6 +173,23 @@ function UserAdmin() {
         <p>{statusMessage}</p>
         <a onClick={()=>{addRow()}}>Add New</a>
       </div>
+      <Modal
+          show={editIndex!==-2}
+          close={cancelEditing}
+          okAction={editIndex===-1?requestAddRow:saveRow}
+          cancelAction={cancelEditing}
+          okName='Save'
+          cancelName='Cancel'>
+          <BigTranscript placement="top" />
+          <PushToTalkButton placement="bottom" captureKey=" " powerOn="auto" />
+          <IntroPopup />
+          <VoiceInput label='User Name' value={data.username} onChange={(e)=>{handleChange(e, 'username')}}/>
+          <VoiceInput label='Full Name' value={data.fullname} onChange={(e)=>{handleChange(e, 'fullname')}}/>
+          <VoiceInput label='Contact Phone' value={data.contactphone} onChange={(e)=>{handleChange(e, 'contactphone')}}/>
+          <VoiceInput label='Email' value={data.email} onChange={(e)=>{handleChange(e, 'email')}}/>
+          <VoiceInput label='Password' value={data.password} onChange={(e)=>{handleChange(e, 'password')}}/>
+            
+        </Modal>
       <TableLayout style={{width:'600px'}}>
         <TableHeader>
           <TableRow>
@@ -124,22 +204,22 @@ function UserAdmin() {
         </TableHeader>
         <tbody>
           {
-            editIndex === -1 ?
-            <TableRow>
-              <TableCell><input value={username} onChange={(e)=>{setUsername(e.target.value)}}/></TableCell>
-              <TableCell><input value={fullname} onChange={(e)=>{setFullname(e.target.value)}}/></TableCell>
-              <TableCell><input value={contactphone} onChange={(e)=>{setContactphone(e.target.value)}}/></TableCell>
-              <TableCell><input value={email} onChange={(e)=>{setEmail(e.target.value)}}/></TableCell>
-              <TableCell><input value={password} onChange={(e)=>{setPassword(e.target.value)}}/></TableCell>
-              <TableCell><a onClick={()=>{requestAddRow()}}>Save</a></TableCell>
-              <TableCell><a onClick={()=>{cancelEditing()}}>Cancel</a></TableCell>
-            </TableRow>
-            : null
+            // editIndex === -1 ?
+            // <TableRow>
+            //   <TableCell><input value={username} onChange={(e)=>{setUsername(e.target.value)}}/></TableCell>
+            //   <TableCell><input value={fullname} onChange={(e)=>{setFullname(e.target.value)}}/></TableCell>
+            //   <TableCell><input value={contactphone} onChange={(e)=>{setContactphone(e.target.value)}}/></TableCell>
+            //   <TableCell><input value={email} onChange={(e)=>{setEmail(e.target.value)}}/></TableCell>
+            //   <TableCell><input value={password} onChange={(e)=>{setPassword(e.target.value)}}/></TableCell>
+            //   <TableCell><a onClick={()=>{requestAddRow()}}>Save</a></TableCell>
+            //   <TableCell><a onClick={()=>{cancelEditing()}}>Cancel</a></TableCell>
+            // </TableRow>
+            // : null
           }
           {
             userList.length ?
             userList.map( (item, index) => {
-              if ( index === editIndex ) {
+              /*if ( index === editIndex ) {
                 return <TableRow key={index}>
                   <TableCell><input value={username} onChange={(e)=>{setUsername(e.target.value)}}/></TableCell>
                   <TableCell><input value={fullname} onChange={(e)=>{setFullname(e.target.value)}}/></TableCell>
@@ -149,7 +229,7 @@ function UserAdmin() {
                   <TableCell><a onClick={()=>{saveRow(index)}}>Save</a></TableCell>
                   <TableCell><a onClick={()=>{cancelEditing()}}>Cancel</a></TableCell>
                 </TableRow>
-              }
+              }*/
               return <TableRow key={index}>
                 <TableCell>{item.username}</TableCell>
                 <TableCell>{item.fullname}</TableCell>
