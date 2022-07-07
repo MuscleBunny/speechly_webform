@@ -27,7 +27,7 @@ function VehicleStatus() {
   const [detailIndex, setDetailIndex] = useState(-1);
   const [isShowSignOff, setIsShowSignOff] = useState(false);
 
-  const [sortValue, setSortValue] = useState('calculated_duation_total');
+  const [sortValue, setSortValue] = useState('calculated_duration');
   const [sortOrder, setSortOrder] = useState(-1);
 
   const { segment } = useSpeechContext();
@@ -82,7 +82,7 @@ function VehicleStatus() {
       setVehicleList(res.data);
     })
     .catch( err => {
-      // navigate('/');
+      navigate('/');
       setStatusMessage('Error has occured while fetching the data.');
     });
   }, [])
@@ -90,7 +90,8 @@ function VehicleStatus() {
   const editRow = (index) => {
     setDetailIndex(index)
     setData({
-      ...vehicleList[index]
+      ...vehicleList[index],
+      inbound_date: new Date(vehicleList[index].inbound_date)
     });
   }
 
@@ -109,12 +110,34 @@ function VehicleStatus() {
   }
 
   const saveRow = () => {
+    const token = storage.get('token');
     setStatusMessage('Please wait.');
     axios.post(config.api + 'vehicle/update', {
       id: vehicleList[detailIndex].id,
       updates: {
-        ...data
+        ...data,
+        outbound_date: data.outbound_date.toLocaleDateString()
       }
+    }, {
+      headers: {'Authorization': token}
+    })
+    .then( res => {
+      setDetailIndex(-1);
+      setStatusMessage('Complete Saving the data.');
+    })
+    .catch((err)=>{
+      navigate('/');
+      setStatusMessage('Error has occured while Saving the data.');
+    });
+  }
+
+  const insertRow = () => {
+    const token = storage.get('token');
+    setStatusMessage('Please wait.');
+    axios.post(config.api + 'vehicle/insert', {
+      ...data,
+    }, {
+      headers: {'Authorization': token}
     })
     .then( res => {
       setDetailIndex(-1);
@@ -157,7 +180,7 @@ function VehicleStatus() {
           <a onClick={() => sortHandle('inbound_driver_name')}><FontAwesomeIcon icon={faUser} /></a>
           <a onClick={() => sortHandle('inbound_company_name')}><FontAwesomeIcon icon={faBuilding} /></a>
           <a onClick={() => sortHandle('inbound_license')}><FontAwesomeIcon icon={faFont} /></a>
-          <a onClick={() => sortHandle('calculated_duation_total')}><FontAwesomeIcon icon={faClock} /></a>
+          <a onClick={() => sortHandle('calculated_duration')}><FontAwesomeIcon icon={faClock} /></a>
         </div>
       </div>
       <div style={{clear:'both'}}></div>
@@ -168,7 +191,7 @@ function VehicleStatus() {
             <TableCell>Company Name{sortValue==='inbound_company_name'?<FontAwesomeIcon icon={sortOrder===1?faSortAmountAsc:faSortAmountDesc} />:''}</TableCell>
             <TableCell>License Plate{sortValue==='inbound_license'?<FontAwesomeIcon icon={sortOrder===1?faSortAmountAsc:faSortAmountDesc} />:''}</TableCell>
             <TableCell>Destination</TableCell>
-            <TableCell>Duration{sortValue==='calculated_duation_total'?<FontAwesomeIcon icon={sortOrder===1?faSortAmountAsc:faSortAmountDesc} />:''}</TableCell>
+            <TableCell>Duration{sortValue==='calculated_duration'?<FontAwesomeIcon icon={sortOrder===1?faSortAmountAsc:faSortAmountDesc} />:''}</TableCell>
           </TableRow>
         </TableHeader>
         <tbody>
@@ -180,7 +203,7 @@ function VehicleStatus() {
                 <TableCell className={sortValue==='inbound_company_name'?'main-col':''}>{item.inbound_company_name}</TableCell>
                 <TableCell className={sortValue==='inbound_license'?'main-col':''}>{item.inbound_license}</TableCell>
                 <TableCell>{item.inbound_destination}</TableCell>
-                <TableCell className={'last ' + (sortValue==='calculated_duation_total'?'main-col':'')}>{item.calculated_duation_total}</TableCell>
+                <TableCell className={'last ' + (sortValue==='calculated_duration'?'main-col':'')}>{item.calculated_duration}</TableCell>
               </TableRow>
             }) :
             null
@@ -193,7 +216,7 @@ function VehicleStatus() {
         <Modal
           show={detailIndex!==-1}
           close={() => { setDetailIndex(-1) }}
-          okAction={saveRow}
+          okAction={detailIndex>=0?saveRow:insertRow}
           cancelAction={() => { setDetailIndex(-1) }}
           okName='Save'
           cancelName='Cancel'>
@@ -205,8 +228,8 @@ function VehicleStatus() {
             <VoiceInput label='Company Name' value={data.inbound_company_name} onChange={(e)=>{handleChange(e, 'inbound_company_name')}}/>
             <VoiceInput label='License' value={data.inbound_license} onChange={(e)=>{handleChange(e, 'inbound_license')}}/>
             <VoiceInput label='Destination' value={data.inbound_destination} onChange={(e)=>{handleChange(e, 'inbound_destination')}}/>
-            <VoiceInput label='Duration' value={data.calculated_duation_total} onChange={(e)=>{handleChange(e, 'calculated_duation_total')}}/>
-            <VoiceDatePicker label='Inbound Date' value={data.inbound_date} onChange={(e)=>{handleChange(e, 'inbound_date'); console.log(e)}}/>
+            <VoiceInput label='Duration' value={data.calculated_duration} onChange={(e)=>{handleChange(e, 'calculated_duration')}}/>
+            <VoiceDatePicker label='Inbound Date' value={data.inbound_date} onChange={(e)=>{handleChange(e, 'inbound_date')}}/>
             <VoiceInput label='Inbound Time' value={data.inbound_time} onChange={(e)=>{handleChange(e, 'inbound_time')}}/>
             {detailIndex!==-2?<Button onClick={ showSignOffModal }>Sign Off</Button>:''}
           <Modal

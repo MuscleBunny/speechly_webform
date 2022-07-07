@@ -56,7 +56,7 @@ function UserAdmin() {
   useEffect( () => {
     const token = storage.get('token');
     if ( token === '' ) {
-      // navigate('/');
+      navigate('/');
     }
     setToken(token);
     setStatusMessage('Please wait a moment till finish fetching the data from server.');
@@ -69,7 +69,7 @@ function UserAdmin() {
     })
     .catch( err => {
       setStatusMessage('Error has occured while fetching the data.');
-      // navigate('/');
+      navigate('/');
     });
   }, [])
 
