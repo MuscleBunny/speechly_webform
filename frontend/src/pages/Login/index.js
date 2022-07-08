@@ -12,7 +12,7 @@ import {
   BigTranscript,
   IntroPopup,
 } from "@speechly/react-ui";
-import { VoiceInput, VoiceCheckbox } from "@speechly/react-voice-forms";
+import { VoiceInput } from "@speechly/react-voice-forms";
 
 function Login() {
   const { segment } = useSpeechContext();
@@ -65,6 +65,7 @@ function Login() {
       }
       setStatusMessage('Success.');
       storage.set('token', res.data.token);
+      storage.set('user', res.data.user);
       navigate('/vehicle');
     })
     .catch((err)=>{

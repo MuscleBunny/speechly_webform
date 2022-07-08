@@ -51,12 +51,13 @@ app.post('/login', async(req, res) => {
     },
     'secret',
     {
-      expiresIn: 300 // 1 year in seconds
+      expiresIn: 30000 // 1 year in seconds
     },
     (err, token) => {
       res.send({
         success: true,
-        token: "Bearer " + token
+        token: "Bearer " + token,
+        user: rows[0].username
       });
     }
   );
@@ -92,6 +93,11 @@ app.get("/vehicle", authenticateToken, async (req, res) => {
   const rows = await Vehicle.findAll();
   res.send(rows);
 });
+
+app.post('/vehicle/insert', authenticateToken, async (req, res) => {
+  const rows = await Vehicle.insert(req.body);
+  res.send(rows);
+})
 
 app.post('/vehicle/update', authenticateToken, async (req, res) => {
   const rows = await Vehicle.update(req.body.id, req.body.updates);

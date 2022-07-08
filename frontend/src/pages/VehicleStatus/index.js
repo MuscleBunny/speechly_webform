@@ -6,9 +6,10 @@ import {TableLayout, TableRow, TableHeader, TableCell} from '../../components/ta
 import Modal from '../../components/Modal'
 import Button from '../../components/Button'
 import storage from '../../libs/storage'
+import MainLayout from '../../layout/MainLayout';
 import {useNavigate} from 'react-router-dom'
-
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faUser, faBuilding, faClock, faFont, faSortAmountAsc, faSortAmountDesc } from '@fortawesome/free-solid-svg-icons'
 import { useSpeechContext } from "@speechly/react-client";
 import {
   PushToTalkButton,
@@ -26,17 +27,12 @@ function VehicleStatus() {
   const [detailIndex, setDetailIndex] = useState(-1);
   const [isShowSignOff, setIsShowSignOff] = useState(false);
 
+  const [sortValue, setSortValue] = useState('calculated_duration');
+  const [sortOrder, setSortOrder] = useState(-1);
+
   const { segment } = useSpeechContext();
   const [data, setData] = useState({
-    driverName: '',
-    companyName: '',
-    license: '',
-    druation: '',
-    inboundDate: '',
-    inboundTime: '',
-    outboundDate: '',
-    outboundTime: '',
-    recordStatus: 0,
+    ...vehicleList[0]
   });
 
   const handleChange = (e, key) => { setData({ ...data, [key]: e }) };
@@ -59,15 +55,18 @@ function VehicleStatus() {
       }
     }
   }, [segment]);
-  // const [driverName, setDriverName] = useState('');
-  // const [companyName, setCompanyName] = useState('');
-  // const [license, setLicense] = useState('');
-  // const [druation, setDuration] = useState('');
-  // const [inboundDate, setInboundDate] = useState('');
-  // const [inboundTime, setInboundTime] = useState('');
-  // const [outboundDate, setOutboundDate] = useState('');
-  // const [outboundTime, setOutboundTime] = useState('');
-  // const [recordStatus, setRecordStatus] = useState(0);
+
+  useEffect( () => {
+    const newArray = [...vehicleList.sort( (a, b) => {
+      const aSort = a[sortValue], bSort = b[sortValue];
+      if ( aSort > bSort )
+        return sortOrder*1;
+      if ( aSort < bSort )
+        return sortOrder*(-1);
+      return 0;
+    })]
+    setVehicleList(newArray);
+  }, [sortValue, sortOrder])
 
   useEffect( () => {
     const token = storage.get('token');
@@ -91,44 +90,38 @@ function VehicleStatus() {
   const editRow = (index) => {
     setDetailIndex(index)
     setData({
-      driverName: vehicleList[index].inbound_driver_name,
-      companyName:vehicleList[index].inbound_company_name,
-      license:vehicleList[index].inbound_license,
-      druation:vehicleList[index].calculated_duation_total,
-      inboundDate:vehicleList[index].inbound_date,
-      inboundTime:vehicleList[index].inbound_time,
-      outboundDate:vehicleList[index].record_status,
-      outboundTime:vehicleList[index].outbound_date,
-      recordStatus:vehicleList[index].outbound_time,
+      ...vehicleList[index],
+      inbound_date: new Date(vehicleList[index].inbound_date)
+    });
+  }
+
+  const addRow = () => {
+    setDetailIndex(-2)
+    const date = new Date();
+    setData({
+      inbound_guard_name: storage.get('user'),
+      inbound_driver_name: '',
+      inbound_company_name: '',
+      inbound_date: date,
+      inbound_time: date.toLocaleTimeString(),
+      inbound_license: '',
+      inbound_destination: ''
     });
   }
 
   const saveRow = () => {
+    const token = storage.get('token');
     setStatusMessage('Please wait.');
     axios.post(config.api + 'vehicle/update', {
       id: vehicleList[detailIndex].id,
       updates: {
-        inbound_driver_name:data.driverName,
-        inbound_company_name:data.companyName,
-        inbound_license:data.license,
-        calculated_duation_total:data.druation,
-        inbound_date:data.inboundDate,
-        inbound_time:data.inboundTime,
-        record_status:data.recordStatus,
-        outbound_date:data.outboundDate,
-        outbound_time:data.outboundTime
+        ...data,
+        outbound_date: data.outbound_date.toLocaleDateString()
       }
+    }, {
+      headers: {'Authorization': token}
     })
     .then( res => {
-      vehicleList[detailIndex].inbound_driver_name = data.driverName;
-      vehicleList[detailIndex].inbound_company_name = data.companyName;
-      vehicleList[detailIndex].inbound_license = data.license;
-      vehicleList[detailIndex].calculated_duation_total = data.druation;
-      vehicleList[detailIndex].inbound_date = data.inboundDate;
-      vehicleList[detailIndex].inbound_time = data.inboundTime;
-      vehicleList[detailIndex].record_status = data.recordStatus;
-      vehicleList[detailIndex].outbound_date = data.outboundDate;
-      vehicleList[detailIndex].outbound_time = data.outboundTime;
       setDetailIndex(-1);
       setStatusMessage('Complete Saving the data.');
     })
@@ -137,28 +130,80 @@ function VehicleStatus() {
       setStatusMessage('Error has occured while Saving the data.');
     });
   }
+
+  const insertRow = () => {
+    const token = storage.get('token');
+    setStatusMessage('Please wait.');
+    axios.post(config.api + 'vehicle/insert', {
+      ...data,
+    }, {
+      headers: {'Authorization': token}
+    })
+    .then( res => {
+      setDetailIndex(-1);
+      setStatusMessage('Complete Saving the data.');
+    })
+    .catch((err)=>{
+      navigate('/');
+      setStatusMessage('Error has occured while Saving the data.');
+    });
+  }
+
+  const sortHandle = (value) => {
+    if ( sortValue === value )
+      setSortOrder(sortOrder*-1);
+    else
+      setSortOrder(1);
+    setSortValue(value);
+  }
+
+  const showSignOffModal = () => {
+    const date = new Date();
+    setIsShowSignOff(true);
+    setData( {
+      ...data,
+      outbound_guard_name: storage.get('user'),
+      outbound_date: date,
+      outbound_time: date.toLocaleTimeString(),
+    })
+  }
   
   return (
-    <div>
+    <MainLayout>
       <p>{statusMessage}</p>
-      <TableLayout style={{width:'700px'}}>
+      <div className='table-menu'>
+        <div className='table-left-menu'>
+          <Button onClick={addRow}>Add New</Button>
+        </div>
+        <div className='table-right-menu'>
+          <span>Sort by : </span>
+          <a onClick={() => sortHandle('inbound_driver_name')}><FontAwesomeIcon icon={faUser} /></a>
+          <a onClick={() => sortHandle('inbound_company_name')}><FontAwesomeIcon icon={faBuilding} /></a>
+          <a onClick={() => sortHandle('inbound_license')}><FontAwesomeIcon icon={faFont} /></a>
+          <a onClick={() => sortHandle('calculated_duration')}><FontAwesomeIcon icon={faClock} /></a>
+        </div>
+      </div>
+      <div style={{clear:'both'}}></div>
+      <TableLayout>
         <TableHeader>
           <TableRow>
-            <TableCell>Driver Name</TableCell>
-            <TableCell>Company Name</TableCell>
-            <TableCell>License Plate</TableCell>
-            <TableCell>Duration</TableCell>
+            <TableCell>Driver Name{sortValue==='inbound_driver_name'?<FontAwesomeIcon icon={sortOrder===1?faSortAmountAsc:faSortAmountDesc} />:''}</TableCell>
+            <TableCell>Company Name{sortValue==='inbound_company_name'?<FontAwesomeIcon icon={sortOrder===1?faSortAmountAsc:faSortAmountDesc} />:''}</TableCell>
+            <TableCell>License Plate{sortValue==='inbound_license'?<FontAwesomeIcon icon={sortOrder===1?faSortAmountAsc:faSortAmountDesc} />:''}</TableCell>
+            <TableCell>Destination</TableCell>
+            <TableCell>Duration{sortValue==='calculated_duration'?<FontAwesomeIcon icon={sortOrder===1?faSortAmountAsc:faSortAmountDesc} />:''}</TableCell>
           </TableRow>
         </TableHeader>
         <tbody>
           {
             vehicleList.length ?
             vehicleList.map( (item, index) => {
-              return <TableRow key={index} onClick={ () => { editRow(index) } }>
-                <TableCell>{item.inbound_driver_name}</TableCell>
-                <TableCell>{item.inbound_company_name}</TableCell>
-                <TableCell>{item.inbound_license}</TableCell>
-                <TableCell>{item.calculated_duation_total}</TableCell>
+              return <TableRow className={index%2===0?'row-odd':'row-even'} key={index} onClick={ () => { editRow(index) } }>
+                <TableCell className={sortValue==='inbound_driver_name'?'main-col':''}>{item.inbound_driver_name}</TableCell>
+                <TableCell className={sortValue==='inbound_company_name'?'main-col':''}>{item.inbound_company_name}</TableCell>
+                <TableCell className={sortValue==='inbound_license'?'main-col':''}>{item.inbound_license}</TableCell>
+                <TableCell>{item.inbound_destination}</TableCell>
+                <TableCell className={'last ' + (sortValue==='calculated_duration'?'main-col':'')}>{item.calculated_duration}</TableCell>
               </TableRow>
             }) :
             null
@@ -171,20 +216,22 @@ function VehicleStatus() {
         <Modal
           show={detailIndex!==-1}
           close={() => { setDetailIndex(-1) }}
-          okAction={saveRow}
+          okAction={detailIndex>=0?saveRow:insertRow}
           cancelAction={() => { setDetailIndex(-1) }}
           okName='Save'
           cancelName='Cancel'>
           <BigTranscript placement="top" />
           <PushToTalkButton placement="bottom" captureKey=" " powerOn="auto" />
           <IntroPopup />
-            <VoiceInput label='Driver Name' value={data.driverName} onChange={(e)=>{handleChange(e, 'driverName')}}/>
-            <VoiceInput label='Company Name' value={data.companyName} onChange={(e)=>{handleChange(e, 'companyName')}}/>
-            <VoiceInput label='License' value={data.license} onChange={(e)=>{handleChange(e, 'license')}}/>
-            <VoiceInput label='Duration' value={data.druation} onChange={(e)=>{handleChange(e, 'druation')}}/>
-            <VoiceInput label='Inbound Date' value={data.inboundDate} onChange={(e)=>{handleChange(e, 'inboundDate')}}/>
-            <VoiceInput label='Inbound Time' value={data.inboundTime} onChange={(e)=>{handleChange(e, 'inboundTime')}}/>
-            <Button onClick={ ()=> { setIsShowSignOff(true) } }>Sign Off</Button>
+            <VoiceInput label='Guard Name' value={data.inbound_guard_name} onChange={(e)=>{handleChange(e, 'inbound_guard_name')}}/>
+            <VoiceInput label='Driver Name' value={data.inbound_driver_name} onChange={(e)=>{handleChange(e, 'inbound_driver_name')}}/>
+            <VoiceInput label='Company Name' value={data.inbound_company_name} onChange={(e)=>{handleChange(e, 'inbound_company_name')}}/>
+            <VoiceInput label='License' value={data.inbound_license} onChange={(e)=>{handleChange(e, 'inbound_license')}}/>
+            <VoiceInput label='Destination' value={data.inbound_destination} onChange={(e)=>{handleChange(e, 'inbound_destination')}}/>
+            <VoiceInput label='Duration' value={data.calculated_duration} onChange={(e)=>{handleChange(e, 'calculated_duration')}}/>
+            <VoiceDatePicker label='Inbound Date' value={data.inbound_date} onChange={(e)=>{handleChange(e, 'inbound_date')}}/>
+            <VoiceInput label='Inbound Time' value={data.inbound_time} onChange={(e)=>{handleChange(e, 'inbound_time')}}/>
+            {detailIndex!==-2?<Button onClick={ showSignOffModal }>Sign Off</Button>:''}
           <Modal
             show={isShowSignOff}
             close={() => { setIsShowSignOff(false) }}
@@ -192,13 +239,14 @@ function VehicleStatus() {
             cancelAction={()=> { setIsShowSignOff(false) }}
             okName='OK'
             cancelName='Cancel'>
-            <VoiceInput label='Date' value={data.outboundDate} onChange={(e)=>{handleChange(e, 'outboundDate')}}/>
-            <VoiceInput label='Time' value={data.outboundTime} onChange={(e)=>{handleChange(e, 'outboundTime')}}/>
+            <VoiceInput label='Name' value={data.outbound_guard_name} onChange={(e)=>{handleChange(e, 'outbound_guard_name')}}/>
+            <VoiceDatePicker label='Date' value={data.outbound_date} onChange={(e)=>{handleChange(e, 'outbound_date')}}/>
+            <VoiceInput label='Time' value={data.outbound_time} onChange={(e)=>{handleChange(e, 'outbound_time')}}/>
           </Modal>
         </Modal>
         : null
       }
-    </div>
+    </MainLayout>
   );
 }
 

@@ -1,5 +1,29 @@
 .table {
-  border: 1px solid #ddd;
+  /* border: 1px solid #ddd; */
   border-collapse: collapse;
   table-layout: auto;
+  width: 100%;
+  margin-top: 10px;
+  text-align: left;
+}
+
+.table-menu {
+  position: relative;
+  height: 30px;
+}
+
+.table-left-menu {
+  position: absolute;
+  bottom: 0px;
+  left: 10px;
+}
+
+.table-right-menu {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+}
+
+.table-menu a {
+  margin-right: 10px;
 }
