@@ -1,5 +1,6 @@
 .App {
   text-align: center;
+  color: #333;
 }
 
 a {
@@ -15,4 +16,34 @@ table input {
 
 input:focus {
   outline: 0;
+}
+
+.widgetGroup label {
+  text-align: right;
+  margin-right: 10px;
+}
+
+.withCalendar {
+  position: relative;
+}
+
+.withCalendar> button {
+  position: absolute;
+  right: 0px;
+  top: 5px;
+}
+
+.withCalendar button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.withCalendar .calendar .row .span12 {
+  justify-content: flex-end;
+  display: flex;
+}
+
+svg {
+  color: #555;
 }

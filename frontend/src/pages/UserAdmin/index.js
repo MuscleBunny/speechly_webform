@@ -8,12 +8,13 @@ import {useNavigate} from 'react-router-dom'
 import Button from '../../components/Button'
 import Modal from '../../components/Modal'
 import { useSpeechContext } from "@speechly/react-client";
+import MainLayout from '../../layout/MainLayout';
 import {
   PushToTalkButton,
   BigTranscript,
   IntroPopup,
 } from "@speechly/react-ui";
-import { VoiceInput, VoiceDatePicker } from "@speechly/react-voice-forms";
+import { VoiceInput } from "@speechly/react-voice-forms";
 
 function UserAdmin() {
   const navigate = useNavigate();
@@ -51,13 +52,6 @@ function UserAdmin() {
   }, [segment]);
 
   const handleChange = (e, key) => { setData({ ...data, [key]: e }) };
-  // const [username, setUsername] = useState('');
-  // const [fullname, setFullname] = useState('');
-  // const [contactphone, setContactphone] = useState('');
-  // const [email, setEmail] = useState('');
-  // const [password, setPassword] = useState('');
-
-
   
   useEffect( () => {
     const token = storage.get('token');
@@ -168,10 +162,15 @@ function UserAdmin() {
   }
 
   return (
-    <div>
+    <MainLayout>
       <div>
         <p>{statusMessage}</p>
-        <a onClick={()=>{addRow()}}>Add New</a>
+        <div className='table-menu'>
+          <div className='table-left-menu'>
+            <Button onClick={addRow}>Add New</Button>
+          </div>
+        </div>
+      <div style={{clear:'both'}}></div>
       </div>
       <Modal
           show={editIndex!==-2}
@@ -188,9 +187,8 @@ function UserAdmin() {
           <VoiceInput label='Contact Phone' value={data.contactphone} onChange={(e)=>{handleChange(e, 'contactphone')}}/>
           <VoiceInput label='Email' value={data.email} onChange={(e)=>{handleChange(e, 'email')}}/>
           <VoiceInput label='Password' value={data.password} onChange={(e)=>{handleChange(e, 'password')}}/>
-            
         </Modal>
-      <TableLayout style={{width:'600px'}}>
+      <TableLayout>
         <TableHeader>
           <TableRow>
             <TableCell>User Name</TableCell>
@@ -204,33 +202,9 @@ function UserAdmin() {
         </TableHeader>
         <tbody>
           {
-            // editIndex === -1 ?
-            // <TableRow>
-            //   <TableCell><input value={username} onChange={(e)=>{setUsername(e.target.value)}}/></TableCell>
-            //   <TableCell><input value={fullname} onChange={(e)=>{setFullname(e.target.value)}}/></TableCell>
-            //   <TableCell><input value={contactphone} onChange={(e)=>{setContactphone(e.target.value)}}/></TableCell>
-            //   <TableCell><input value={email} onChange={(e)=>{setEmail(e.target.value)}}/></TableCell>
-            //   <TableCell><input value={password} onChange={(e)=>{setPassword(e.target.value)}}/></TableCell>
-            //   <TableCell><a onClick={()=>{requestAddRow()}}>Save</a></TableCell>
-            //   <TableCell><a onClick={()=>{cancelEditing()}}>Cancel</a></TableCell>
-            // </TableRow>
-            // : null
-          }
-          {
             userList.length ?
             userList.map( (item, index) => {
-              /*if ( index === editIndex ) {
-                return <TableRow key={index}>
-                  <TableCell><input value={username} onChange={(e)=>{setUsername(e.target.value)}}/></TableCell>
-                  <TableCell><input value={fullname} onChange={(e)=>{setFullname(e.target.value)}}/></TableCell>
-                  <TableCell><input value={contactphone} onChange={(e)=>{setContactphone(e.target.value)}}/></TableCell>
-                  <TableCell><input value={email} onChange={(e)=>{setEmail(e.target.value)}}/></TableCell>
-                  <TableCell><input value={password} onChange={(e)=>{setPassword(e.target.value)}}/></TableCell>
-                  <TableCell><a onClick={()=>{saveRow(index)}}>Save</a></TableCell>
-                  <TableCell><a onClick={()=>{cancelEditing()}}>Cancel</a></TableCell>
-                </TableRow>
-              }*/
-              return <TableRow key={index}>
+              return <TableRow className={index%2===0?'row-odd':'row-even'} key={index}>
                 <TableCell>{item.username}</TableCell>
                 <TableCell>{item.fullname}</TableCell>
                 <TableCell>{item.contactphone}</TableCell>
@@ -244,7 +218,7 @@ function UserAdmin() {
           }
         </tbody>
       </TableLayout>
-    </div>
+    </MainLayout>
   );
 }
 
