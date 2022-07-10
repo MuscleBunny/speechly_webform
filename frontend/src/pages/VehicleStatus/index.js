@@ -18,6 +18,27 @@ import {
 } from "@speechly/react-ui";
 import { VoiceInput, VoiceDatePicker } from "@speechly/react-voice-forms";
 
+Date.prototype.getCustomDate = function() {
+  var mm = this.getMonth() + 1; // getMonth() is zero-based
+  var dd = this.getDate();
+
+  return [this.getFullYear(),
+          (mm>9 ? '' : '0') + mm,
+          (dd>9 ? '' : '0') + dd
+         ].join('-');
+};
+
+Date.prototype.getCustomTime = function() {
+  var hh = this.getHours();
+  var mm = this.getMinutes();
+  var ss = this.getSeconds();
+
+  return [
+          (hh>9 ? '' : '0') + hh,
+          (mm>9 ? '' : '0') + mm,
+          (ss>9 ? '' : '0') + ss
+         ].join(':');
+};
 
 function VehicleStatus() {
   const navigate = useNavigate();
@@ -27,7 +48,7 @@ function VehicleStatus() {
   const [detailIndex, setDetailIndex] = useState(-1);
   const [isShowSignOff, setIsShowSignOff] = useState(false);
 
-  const [sortValue, setSortValue] = useState('calculated_duration');
+  const [sortValue, setSortValue] = useState('');
   const [sortOrder, setSortOrder] = useState(-1);
 
   const { segment } = useSpeechContext();
@@ -58,10 +79,11 @@ function VehicleStatus() {
 
   useEffect( () => {
     const newArray = [...vehicleList.sort( (a, b) => {
-      const aSort = a[sortValue], bSort = b[sortValue];
-      if ( aSort > bSort )
-        return sortOrder*1;
+      const aSort = a[sortValue];
+      const bSort = b[sortValue];
       if ( aSort < bSort )
+        return sortOrder*1;
+      if ( aSort > bSort )
         return sortOrder*(-1);
       return 0;
     })]
@@ -80,6 +102,7 @@ function VehicleStatus() {
     .then( res => {
       setStatusMessage('Complete fetching the data from server.');
       setVehicleList(res.data);
+      setSortValue('calculated_duration');
     })
     .catch( err => {
       navigate('/');
@@ -91,7 +114,8 @@ function VehicleStatus() {
     setDetailIndex(index)
     setData({
       ...vehicleList[index],
-      inbound_date: new Date(vehicleList[index].inbound_date)
+      inbound_date: new Date(vehicleList[index].inbound_date),
+      outbound_date: vehicleList[index].outbound_date?(new Date(vehicleList[index].outbound_date)):(new Date())
     });
   }
 
@@ -103,7 +127,7 @@ function VehicleStatus() {
       inbound_driver_name: '',
       inbound_company_name: '',
       inbound_date: date,
-      inbound_time: date.toLocaleTimeString(),
+      inbound_time: date.getCustomTime(),
       inbound_license: '',
       inbound_destination: ''
     });
@@ -112,18 +136,27 @@ function VehicleStatus() {
   const saveRow = () => {
     const token = storage.get('token');
     setStatusMessage('Please wait.');
+    
     axios.post(config.api + 'vehicle/update', {
       id: vehicleList[detailIndex].id,
       updates: {
         ...data,
-        outbound_date: data.outbound_date.toLocaleDateString()
+        inbound_date: data.inbound_date.getCustomDate(),
+        outbound_date: (data.outbound_date)?(data.outbound_date.getCustomDate()):''
       }
     }, {
       headers: {'Authorization': token}
     })
     .then( res => {
+      let newVehicleList = [...vehicleList];
       setDetailIndex(-1);
       setStatusMessage('Complete Saving the data.');
+      newVehicleList[detailIndex] = data;
+      if ( data.record_status === 2 ) {
+        newVehicleList = [...newVehicleList.slice(0, detailIndex), ...newVehicleList.slice(detailIndex+1)];
+      }
+      setVehicleList([...newVehicleList]);
+      setData({});
     })
     .catch((err)=>{
       navigate('/');
@@ -136,10 +169,16 @@ function VehicleStatus() {
     setStatusMessage('Please wait.');
     axios.post(config.api + 'vehicle/insert', {
       ...data,
+      inbound_date: data.inbound_date.getCustomDate()
     }, {
       headers: {'Authorization': token}
     })
     .then( res => {
+      console.log('new', res);
+      data.id = res.data.insertId;
+      var newArray = [...vehicleList, data];
+      setVehicleList(newArray);
+      setData({});
       setDetailIndex(-1);
       setStatusMessage('Complete Saving the data.');
     })
@@ -164,7 +203,7 @@ function VehicleStatus() {
       ...data,
       outbound_guard_name: storage.get('user'),
       outbound_date: date,
-      outbound_time: date.toLocaleTimeString(),
+      outbound_time: date.getCustomTime(),
     })
   }
   
@@ -228,14 +267,14 @@ function VehicleStatus() {
             <VoiceInput label='Company Name' value={data.inbound_company_name} onChange={(e)=>{handleChange(e, 'inbound_company_name')}}/>
             <VoiceInput label='License' value={data.inbound_license} onChange={(e)=>{handleChange(e, 'inbound_license')}}/>
             <VoiceInput label='Destination' value={data.inbound_destination} onChange={(e)=>{handleChange(e, 'inbound_destination')}}/>
-            <VoiceInput label='Duration' value={data.calculated_duration} onChange={(e)=>{handleChange(e, 'calculated_duration')}}/>
+            {/* <VoiceInput label='Duration' value={data.calculated_duration} onChange={(e)=>{handleChange(e, 'calculated_duration')}}/> */}
             <VoiceDatePicker label='Inbound Date' value={data.inbound_date} onChange={(e)=>{handleChange(e, 'inbound_date')}}/>
             <VoiceInput label='Inbound Time' value={data.inbound_time} onChange={(e)=>{handleChange(e, 'inbound_time')}}/>
             {detailIndex!==-2?<Button onClick={ showSignOffModal }>Sign Off</Button>:''}
           <Modal
             show={isShowSignOff}
             close={() => { setIsShowSignOff(false) }}
-            okAction={()=> { handleChange(1, 'outboundDate'); setIsShowSignOff(false); }}
+            okAction={()=> { handleChange(2, 'record_status'); setIsShowSignOff(false); }}
             cancelAction={()=> { setIsShowSignOff(false) }}
             okName='OK'
             cancelName='Cancel'>

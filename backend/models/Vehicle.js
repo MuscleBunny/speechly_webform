@@ -27,32 +27,22 @@ Vehicle.update = async (id, updates) => {
    outbound_guard_name=?, \
    outbound_date=?, \
    outbound_time=?, \
-   calculated_duration_on_property=timestamp(?, ?)';
-  //  calculated_duration_on_property=TIMEDIFF( timestamp(?, ?), timestamp(?, ?) )';
- /* let isFirst = true;
-  for ( const key in updates ) {
-    if ( isFirst ) {
-      query += key + '=\'' + updates[key] + '\'';
-      isFirst = false;
-      continue;
-    }
-    query += ',' + key + '=\'' + updates[key] + '\' ';
-  }*/
+   record_status=?';
   query += ` where id=${id}`;
-  return await db.query(query, [
-    updates.inbound_guard_name,
-    updates.inbound_driver_name,
-    updates.inbound_company_name,
-    updates.inbound_license,
-    updates.inbound_destination,
-    updates.inbound_date,
-    updates.inbound_time,
-    updates.outbound_guard_name,
-    updates.outbound_date,
-    updates.outbound_time,
-    updates.outbound_date,
-    updates.outbound_time,
+  await db.query(query, [
+    updates.inbound_guard_name ? updates.inbound_guard_name : '',
+    updates.inbound_driver_name ? updates.inbound_driver_name : '',
+    updates.inbound_company_name ? updates.inbound_company_name : '',
+    updates.inbound_license ? updates.inbound_license : '',
+    updates.inbound_destination ? updates.inbound_destination : '',
+    updates.inbound_date ? updates.inbound_date : '',
+    updates.inbound_time ? updates.inbound_time : '',
+    updates.outbound_guard_name ? updates.outbound_guard_name : '',
+    updates.outbound_date ? updates.outbound_date : '',
+    updates.outbound_time ? updates.outbound_time : '',
+    updates.record_status ? updates.record_status : '',
   ]);
+  return await db.query('update vehicle_status set calculated_duration_on_property=TIMESTAMPDIFF(HOUR, TIMESTAMP(inbound_date, inbound_time), TIMESTAMP(outbound_date, outbound_time)) ' +  `where id=${id}`);
 }
 
 Vehicle.delete = async (id) => {
@@ -60,30 +50,7 @@ Vehicle.delete = async (id) => {
 }
 
 Vehicle.findAll = async () => {
-  // return [
-  //   {
-  //     inbound_driver_name : 'a',
-  //     inbound_company_name : 'a',
-  //     inbound_license : 'a',
-  //     calculated_duation_total : 'a',
-  //     inbound_destination : 'a'
-  //   },
-  //   {
-  //     inbound_driver_name : 'A',
-  //     inbound_company_name : 'aC',
-  //     inbound_license : 'a',
-  //     calculated_duation_total : 'a',
-  //     inbound_destination : 'a'
-  //   },
-  //   {
-  //     inbound_driver_name : 'b',
-  //     inbound_company_name : 'c',
-  //     inbound_license : 'A',
-  //     calculated_duation_total : 'ad',
-  //     inbound_destination : 'D'
-  //   },
-  // ]
-  return await db.query('SELECT *, TIMEDIFF(timestamp(inbound_date, inbound_time), NOW()) as calculated_duration from vehicle_status');
+  return await db.query('SELECT *, TIMESTAMPDIFF(HOUR, timestamp(inbound_date, inbound_time), NOW()) as calculated_duration from vehicle_status where record_status=1');
 }
 
 Vehicle.findById = async (id) => {
