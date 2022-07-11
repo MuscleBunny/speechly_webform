@@ -103,7 +103,7 @@ function Login() {
             onChange={(e) => handleChange(e, "password")}
           />
         </div>
-        <Button onClick={loginSubmit}>Login</Button>
+        <Button className={'primary-button'} onClick={loginSubmit}>Login</Button>
       </div>
     </div>
   );

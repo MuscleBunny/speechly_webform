@@ -104,6 +104,6 @@ app.post('/vehicle/update', authenticateToken, async (req, res) => {
   res.send(rows);
 })
 
-app.listen(3001, () => {
+app.listen(3001, '0.0.0.0', () => {
   console.log("Hello");
 });

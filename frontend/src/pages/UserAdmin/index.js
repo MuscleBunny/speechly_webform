@@ -167,12 +167,13 @@ function UserAdmin() {
         <p>{statusMessage}</p>
         <div className='table-menu'>
           <div className='table-left-menu'>
-            <Button onClick={addRow}>Add New</Button>
+            <Button className='primary-button' onClick={addRow}>Add New</Button>
           </div>
         </div>
       <div style={{clear:'both'}}></div>
       </div>
       <Modal
+          title={editIndex===-1?'Add new User':'Edit User'}
           show={editIndex!==-2}
           close={cancelEditing}
           okAction={editIndex===-1?requestAddRow:saveRow}

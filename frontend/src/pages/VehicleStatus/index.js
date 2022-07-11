@@ -212,7 +212,7 @@ function VehicleStatus() {
       <p>{statusMessage}</p>
       <div className='table-menu'>
         <div className='table-left-menu'>
-          <Button onClick={addRow}>Add New</Button>
+          <Button className='primary-button' onClick={addRow}>Add New</Button>
         </div>
         <div className='table-right-menu'>
           <span>Sort by : </span>
@@ -253,6 +253,7 @@ function VehicleStatus() {
       {
         detailIndex !== -1 ?
         <Modal
+          title={detailIndex>=0?'Edit Vehicle Record':'Sign on New Vehicle'}
           show={detailIndex!==-1}
           close={() => { setDetailIndex(-1) }}
           okAction={detailIndex>=0?saveRow:insertRow}
@@ -270,8 +271,9 @@ function VehicleStatus() {
             {/* <VoiceInput label='Duration' value={data.calculated_duration} onChange={(e)=>{handleChange(e, 'calculated_duration')}}/> */}
             <VoiceDatePicker label='Inbound Date' value={data.inbound_date} onChange={(e)=>{handleChange(e, 'inbound_date')}}/>
             <VoiceInput label='Inbound Time' value={data.inbound_time} onChange={(e)=>{handleChange(e, 'inbound_time')}}/>
-            {detailIndex!==-2?<Button onClick={ showSignOffModal }>Sign Off</Button>:''}
+            {detailIndex!==-2?<Button className='info-button' onClick={ showSignOffModal }>Sign Off this vehicle</Button>:''}
           <Modal
+            title='Sign Off Vehicle'
             show={isShowSignOff}
             close={() => { setIsShowSignOff(false) }}
             okAction={()=> { handleChange(2, 'record_status'); setIsShowSignOff(false); }}

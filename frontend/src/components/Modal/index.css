@@ -15,8 +15,25 @@
 .custom-modal-content {
   background: #fff;
   padding: 30px;
+  background: linear-gradient(#eee, #ffffff 20%);
+  outline: none !important;
+  box-shadow: 0 0 10px #000;
+  border-radius: 0.3rem;
 }
 
 .custom-modal-footer {
   margin-top: 10px; 
+  padding-top: 10px;
+  text-align: right;
+}
+
+.custom-modal-header {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ccc;
+}
+.custom-modal-header span {
+  font-size: 2rem;
+}
+.custom-modal-header a {
+  float:right;
 }

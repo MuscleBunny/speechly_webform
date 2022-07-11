@@ -3,7 +3,7 @@ import {useEffect, useState} from 'react'
 
 function Button(props) {
   return (
-    <a className='button' onClick={props.onClick}>
+    <a className={'button ' + props.className } onClick={props.onClick}>
       {props.children}
     </a>
   );
